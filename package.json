@@ -1,6 +1,6 @@
 {
   "name": "ethlab-hardhat",
-  "version": "0.0.1",
+  "version": "0.0.3",
   "description": "A Hardhat plugin that can be used to register contracts and deployments with EthLab.",
   "repository": "github:CryptoKass/ethlab-hardhat",
   "author": "CryptoKass",
