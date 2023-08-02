@@ -34,8 +34,8 @@ class EthLab {
     }
     async deployContract(name, args = []) {
         const factory = await this.hre.ethers.getContractFactory(name);
-        const contract = await factory.deploy(...args);
-        await contract.deployed();
+        const contract = (await factory.deploy(...args));
+        await contract.waitForDeployment();
         await this.registerContract(name, contract);
         return contract;
     }

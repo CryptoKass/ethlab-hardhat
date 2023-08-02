@@ -18,9 +18,7 @@ export declare class EthLab {
     constructor(hre: HardhatRuntimeEnvironment);
     registerABI(name: string, abi: string): Promise<void>;
     registerContract(name: string, contract: Contract): Promise<void>;
-    deployContract(name: string, args?: ContractMethodArgs<any[]>): Promise<import("ethers").BaseContract & {
-        deploymentTransaction(): import("ethers").ContractTransactionResponse;
-    } & Omit<Contract, keyof import("ethers").BaseContract>>;
+    deployContract(name: string, args?: ContractMethodArgs<any[]>): Promise<Contract>;
     private save;
 }
 export {};

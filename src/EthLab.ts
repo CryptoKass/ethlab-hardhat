@@ -21,8 +21,11 @@ export class EthLab {
   deploymentInfo: DeploymentInfo[] = [];
 
   constructor(hre: HardhatRuntimeEnvironment) {
-    process.on("exit", () => this.save());
     this.hre = hre;
+
+    process.on("exit", () => this.save());
+    process.on("SIGINT", () => this.save());
+    process.on("SIGTERM", () => this.save());
   }
 
   async registerABI(name: string, abi: string) {
@@ -53,14 +56,20 @@ export class EthLab {
 
   async deployContract(name: string, args: ContractMethodArgs<any[]> = []) {
     const factory = await this.hre.ethers.getContractFactory(name);
-    const contract = await factory.deploy(...args);
-    await contract.deployed();
+    const contract = (await factory.deploy(...args)) as Contract;
+    await contract.waitForDeployment();
 
     await this.registerContract(name, contract);
     return contract;
   }
 
-  private save() {
+  save() {
+    if (
+      Object.values(this.contracts).length === 0 &&
+      this.deploymentInfo.length === 0
+    )
+      return console.log("ethlab: No contracts to save");
+
     const config = this.hre.config;
     const contractsPath = config.paths.ethlabPath + "/contracts.json";
     const deploymentsPath = config.paths.ethlabPath + "/deployments.json";

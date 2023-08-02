@@ -1,12 +1,12 @@
 {
   "name": "ethlab-hardhat",
-  "version": "0.0.3",
+  "version": "0.0.7",
   "description": "A Hardhat plugin that can be used to register contracts and deployments with EthLab.",
   "repository": "github:CryptoKass/ethlab-hardhat",
   "author": "CryptoKass",
   "license": "MIT",
-  "main": "dist/src/index.js",
-  "types": "dist/src/index.d.ts",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "keywords": [
     "ethereum",
     "smart-contracts",
@@ -22,7 +22,7 @@
     "prepublishOnly": "npm run build"
   },
   "files": [
-    "dist/src/",
+    "dist/**/*",
     "src/",
     "LICENSE",
     "README.md"
