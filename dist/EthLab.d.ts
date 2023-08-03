@@ -19,7 +19,9 @@ export declare class EthLab {
     registerABI(name: string, abi: string): Promise<void>;
     registerContract(name: string, contract: Contract): Promise<void>;
     deployContract(name: string, args?: ContractMethodArgs<any[]>): Promise<Contract>;
-    private save;
+    _registerExternalDeployment(name: string, address: string): Promise<void>;
+    clear(): void;
+    save(): void;
 }
 export {};
 //# sourceMappingURL=EthLab.d.ts.map

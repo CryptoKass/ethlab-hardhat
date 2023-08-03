@@ -22,10 +22,7 @@ export class EthLab {
 
   constructor(hre: HardhatRuntimeEnvironment) {
     this.hre = hre;
-
     process.on("exit", () => this.save());
-    process.on("SIGINT", () => this.save());
-    process.on("SIGTERM", () => this.save());
   }
 
   async registerABI(name: string, abi: string) {
@@ -63,6 +60,32 @@ export class EthLab {
     return contract;
   }
 
+  async _registerExternalDeployment(name: string, address: string) {
+    // 1. ensure abi exists for this contract
+    if (!this.contracts[name])
+      throw new Error(`ethlab: No ABI registered for contract '${name}'`);
+
+    // 2. get deployment transaction
+    const contract = await this.hre.ethers.getContractAt(
+      this.contracts[name].abi,
+      address
+    );
+    const tx = await contract.deploymentTransaction();
+
+    // 3. save deployment info
+    this.deploymentInfo.push({
+      name,
+      block: tx?.blockNumber || 0,
+      tx: tx?.hash || "",
+      address: await contract.getAddress(),
+    });
+  }
+
+  clear() {
+    this.contracts = {};
+    this.deploymentInfo = [];
+  }
+
   save() {
     if (
       Object.values(this.contracts).length === 0 &&
@@ -70,9 +93,14 @@ export class EthLab {
     )
       return console.log("ethlab: No contracts to save");
 
+    console.log("ethlab: Saving contracts and deployment info");
     const config = this.hre.config;
     const contractsPath = config.paths.ethlabPath + "/contracts.json";
     const deploymentsPath = config.paths.ethlabPath + "/deployments.json";
+
+    // 0. ensure ethlabPath exists (create if not)
+    if (!fs.existsSync(config.paths.ethlabPath))
+      fs.mkdirSync(config.paths.ethlabPath, { recursive: true });
 
     // 1. save contracts
     fs.writeFileSync(contractsPath, JSON.stringify(this.contracts, null, 2));

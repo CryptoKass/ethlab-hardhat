@@ -8,6 +8,8 @@ const plugins_1 = require("hardhat/plugins");
 const path_1 = __importDefault(require("path"));
 const EthLab_1 = require("./EthLab");
 require("./type-extensions");
+const config_2 = require("hardhat/config");
+const server_1 = require("./server");
 (0, config_1.extendConfig)((config, userConfig) => {
     var _a;
     // add ethlabPath to config
@@ -26,5 +28,22 @@ require("./type-extensions");
 });
 (0, config_1.extendEnvironment)((hre) => {
     hre.ethlab = (0, plugins_1.lazyObject)(() => new EthLab_1.EthLab(hre));
+});
+(0, config_2.task)("ethlab", "Start the ethlab api server")
+    .addPositionalParam("cmd", "Command to run", "start")
+    .setAction(async (params, hre) => {
+    switch (params.cmd) {
+        case "start":
+            throw new Error("Not implemented");
+        case "api":
+            (0, server_1.createServer)(hre, 3000)
+                .then(() => console.log("ethlab: Server started"))
+                .catch((err) => console.error(err));
+            // keep the process alive
+            await new Promise(() => { });
+            break;
+        default:
+            throw new Error(`Unknown command '${params.cmd}'`);
+    }
 });
 //# sourceMappingURL=index.js.map
