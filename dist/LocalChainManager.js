@@ -7,6 +7,8 @@ exports.LocalChainManager = void 0;
 const child_process_1 = require("child_process");
 const tree_kill_1 = __importDefault(require("tree-kill"));
 const ethers_1 = require("ethers");
+const fs_1 = __importDefault(require("fs"));
+const path_1 = __importDefault(require("path"));
 class LocalChainManager {
     constructor(hre) {
         this.hre = hre;
@@ -61,10 +63,19 @@ class LocalChainManager {
         });
     }
     async deployContracts() {
-        return await this.hre.run("run", {
+        await this.hre.run("run", {
             script: "scripts/deploy.ts",
             network: "localhost",
         });
+        // open the file: contracts.json and
+        // deployments.json files and read the contents
+        // into memory
+        const contractsPath = path_1.default.join(this.hre.config.paths.ethlabPath, "./contracts.json");
+        const contracts = JSON.parse(fs_1.default.readFileSync(contractsPath).toString());
+        const deploymentsPath = path_1.default.join(this.hre.config.paths.ethlabPath, "./deployments.json");
+        const deployments = JSON.parse(fs_1.default.readFileSync(deploymentsPath).toString());
+        this.hre.ethlab.contracts = contracts;
+        this.hre.ethlab.deploymentInfo = deployments;
     }
 }
 exports.LocalChainManager = LocalChainManager;
