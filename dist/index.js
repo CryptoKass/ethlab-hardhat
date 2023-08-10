@@ -4,46 +4,61 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const config_1 = require("hardhat/config");
-const plugins_1 = require("hardhat/plugins");
 const path_1 = __importDefault(require("path"));
-const EthLab_1 = require("./EthLab");
 require("./type-extensions");
 const config_2 = require("hardhat/config");
-const server_1 = require("./server");
+const ethers_1 = require("ethers");
+const trackDeployments_1 = require("./trackDeployments");
 (0, config_1.extendConfig)((config, userConfig) => {
     var _a;
-    // add ethlabPath to config
-    const userPath = (_a = userConfig.paths) === null || _a === void 0 ? void 0 : _a.ethlabPath;
-    let ethlabPath;
+    // add ethlabOutput to config
+    const userPath = (_a = userConfig.paths) === null || _a === void 0 ? void 0 : _a.ethlabOutput;
+    let ethlabOutput;
     if (userPath === undefined) {
-        ethlabPath = path_1.default.join(config.paths.root, "./artifacts/ethlab");
+        ethlabOutput = config.paths.artifacts;
     }
     else {
         if (path_1.default.isAbsolute(userPath))
-            ethlabPath = userPath;
+            ethlabOutput = userPath;
         else
-            ethlabPath = path_1.default.normalize(path_1.default.join(config.paths.root, userPath));
+            ethlabOutput = path_1.default.normalize(path_1.default.join(config.paths.root, userPath));
     }
-    config.paths.ethlabPath = ethlabPath;
+    config.paths.ethlabOutput = ethlabOutput;
 });
-(0, config_1.extendEnvironment)((hre) => {
-    hre.ethlab = (0, plugins_1.lazyObject)(() => new EthLab_1.EthLab(hre));
+(0, config_2.task)("ethlab:watcher", "Track contract deployments").setAction(async (args, hre) => {
+    (0, trackDeployments_1.trackDeployments)(hre);
+    await new Promise(() => { }); // wait forever
 });
-(0, config_2.task)("ethlab", "Start the ethlab api server")
-    .addPositionalParam("cmd", "Command to run", "start")
-    .setAction(async (params, hre) => {
-    switch (params.cmd) {
-        case "start":
-            throw new Error("Not implemented");
-        case "api":
-            (0, server_1.createServer)(hre, 3000)
-                .then(() => console.log("ethlab: Server started"))
-                .catch((err) => console.error(err));
-            // keep the process alive
-            await new Promise(() => { });
-            break;
-        default:
-            throw new Error(`Unknown command '${params.cmd}'`);
-    }
+(0, config_2.task)("ethlab:start", "Deploy contracts").setAction(async (args, hre) => {
+    console.log("\n\n🧪 STARTING LOCAL NODE 🧪");
+    hre.run("node");
+    // wait for connection.
+    await _isChainAlive();
+    hre.hardhatArguments.network = "localhost";
+    hre.network.name = "localhost";
+    console.log("\n\n🧪 STARTING WATCHER 🧪");
+    hre.run("ethlab:watcher");
+    console.log("\n\n🧪 DEPLOYING CONTRACTS 🧪");
+    await hre.run("run", {
+        script: "scripts/deploy.ts",
+        network: "localhost",
+    });
+    await new Promise(() => { }); // wait forever
 });
+const _isChainAlive = () => {
+    const rpc = new ethers_1.JsonRpcProvider("http://127.0.0.1:8545/");
+    return new Promise((resolve, reject) => {
+        let maxAttempts = 20;
+        const checkInterval = setInterval(() => {
+            rpc
+                .getNetwork()
+                .then(() => resolve(clearInterval(checkInterval)))
+                .catch(() => { });
+            if (maxAttempts-- === 0) {
+                clearInterval(checkInterval);
+                reject(new Error("Could not connect to local chain"));
+            }
+        }, 1000);
+    }).finally(() => rpc.destroy());
+};
 //# sourceMappingURL=index.js.map

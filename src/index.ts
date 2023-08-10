@@ -1,47 +1,70 @@
-import { extendConfig, extendEnvironment } from "hardhat/config";
-import { lazyObject } from "hardhat/plugins";
+import { extendConfig } from "hardhat/config";
 import { HardhatConfig, HardhatUserConfig } from "hardhat/types";
 import path from "path";
-import { EthLab } from "./EthLab";
 import "./type-extensions";
 import { task } from "hardhat/config";
-import { createServer } from "./server";
+import { JsonRpcProvider } from "ethers";
+import { trackDeployments } from "./trackDeployments";
 
 extendConfig(
   (config: HardhatConfig, userConfig: Readonly<HardhatUserConfig>) => {
-    // add ethlabPath to config
-    const userPath = userConfig.paths?.ethlabPath;
-    let ethlabPath: string;
+    // add ethlabOutput to config
+    const userPath = userConfig.paths?.ethlabOutput;
+    let ethlabOutput: string;
     if (userPath === undefined) {
-      ethlabPath = path.join(config.paths.root, "./artifacts/ethlab");
+      ethlabOutput = config.paths.artifacts;
     } else {
-      if (path.isAbsolute(userPath)) ethlabPath = userPath;
-      else ethlabPath = path.normalize(path.join(config.paths.root, userPath));
+      if (path.isAbsolute(userPath)) ethlabOutput = userPath;
+      else
+        ethlabOutput = path.normalize(path.join(config.paths.root, userPath));
     }
 
-    config.paths.ethlabPath = ethlabPath;
+    config.paths.ethlabOutput = ethlabOutput;
   }
 );
 
-extendEnvironment((hre) => {
-  hre.ethlab = lazyObject(() => new EthLab(hre));
+task("ethlab:watcher", "Track contract deployments").setAction(
+  async (args, hre) => {
+    trackDeployments(hre);
+    await new Promise(() => {}); // wait forever
+  }
+);
+
+task("ethlab:start", "Deploy contracts").setAction(async (args, hre) => {
+  console.log("\n\n🧪 STARTING LOCAL NODE 🧪");
+  hre.run("node");
+
+  // wait for connection.
+  await _isChainAlive();
+  hre.hardhatArguments.network = "localhost";
+  hre.network.name = "localhost";
+
+  console.log("\n\n🧪 STARTING WATCHER 🧪");
+  hre.run("ethlab:watcher");
+
+  console.log("\n\n🧪 DEPLOYING CONTRACTS 🧪");
+  await hre.run("run", {
+    script: "scripts/deploy.ts",
+    network: "localhost",
+  });
+
+  await new Promise(() => {}); // wait forever
 });
 
-task("ethlab", "Start the ethlab api server")
-  .addPositionalParam("cmd", "Command to run", "start")
-  .setAction(async (params, hre) => {
-    switch (params.cmd) {
-      case "start":
-        throw new Error("Not implemented");
-      case "api":
-        createServer(hre, 3000)
-          .then(() => console.log("ethlab: Server started"))
-          .catch((err) => console.error(err));
+const _isChainAlive = () => {
+  const rpc = new JsonRpcProvider("http://127.0.0.1:8545/");
+  return new Promise((resolve, reject) => {
+    let maxAttempts = 20;
+    const checkInterval = setInterval(() => {
+      rpc
+        .getNetwork()
+        .then(() => resolve(clearInterval(checkInterval)))
+        .catch(() => {});
 
-        // keep the process alive
-        await new Promise(() => {});
-        break;
-      default:
-        throw new Error(`Unknown command '${params.cmd}'`);
-    }
-  });
+      if (maxAttempts-- === 0) {
+        clearInterval(checkInterval);
+        reject(new Error("Could not connect to local chain"));
+      }
+    }, 1000);
+  }).finally(() => rpc.destroy());
+};
