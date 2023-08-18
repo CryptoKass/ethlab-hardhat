@@ -1,4 +1,3 @@
-import "@nomicfoundation/hardhat-ethers";
 import "hardhat/types/config";
 import "hardhat/types/runtime";
 

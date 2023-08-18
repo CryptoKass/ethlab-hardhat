@@ -1,6 +1,6 @@
 {
   "name": "ethlab-hardhat",
-  "version": "0.0.9",
+  "version": "0.0.10",
   "description": "A Hardhat plugin that can be used to register contracts and deployments with EthLab.",
   "repository": "github:CryptoKass/ethlab-hardhat",
   "author": "CryptoKass",
@@ -35,6 +35,7 @@
     "@types/fs-extra": "^5.0.4",
     "@types/mocha": "^5.2.6",
     "@types/node": ">=12.0.0",
+    "ethers": "^6.0.0",
     "chai": "^4.2.0",
     "hardhat": "^2.0.0",
     "mocha": "^7.1.2",
@@ -46,7 +47,8 @@
     "typescript": "^4.0.3"
   },
   "peerDependencies": {
-    "hardhat": "^2.0.0"
+    "hardhat": "^2.17.1",
+    "@nomicfoundation/hardhat-toolbox": "^3.0.0"
   },
   "dependencies": {
     "tree-kill": "^1.2.2"

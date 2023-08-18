@@ -1,4 +1,4 @@
-import { HardhatRuntimeEnvironment } from "hardhat/types";
+import type { HardhatRuntimeEnvironment } from "hardhat/types";
 import { JsonRpcProvider, Contract, toUtf8Bytes, keccak256 } from "ethers";
 import fs from "fs";
 import path from "path";
@@ -42,7 +42,7 @@ export const trackDeployments = async (hre: HardhatRuntimeEnvironment) => {
 
   // 0. load contract artifacts
   console.log("[ethlab:watcher] Loading Contract artifacts");
-  const contractArtifacts = _loadContractArtifacts(hre);
+  const contractArtifacts = await _loadContractArtifacts(hre);
 
   // 1. mount artifacts
   for (const artifact of contractArtifacts) {
@@ -117,7 +117,9 @@ export const trackDeploymentsFromBlock = async (
   _saveMethodRegistry(hre, registry);
 };
 
-const _loadContractArtifacts = (hre: HardhatRuntimeEnvironment) => {
+const _loadContractArtifacts = async (hre: HardhatRuntimeEnvironment) => {
+  await hre.run("compile");
+
   const artifactsPath = `${hre.config.paths.artifacts}/contracts`;
   const artifacts = fs.readdirSync(artifactsPath);
 

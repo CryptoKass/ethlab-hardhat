@@ -1,4 +1,4 @@
-import { HardhatRuntimeEnvironment } from "hardhat/types";
+import type { HardhatRuntimeEnvironment } from "hardhat/types";
 import { JsonRpcProvider } from "ethers";
 type Contract4Bytes = Record<string, string>;
 interface ContractsData {

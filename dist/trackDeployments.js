@@ -21,7 +21,7 @@ const trackDeployments = async (hre) => {
     const registry = {};
     // 0. load contract artifacts
     console.log("[ethlab:watcher] Loading Contract artifacts");
-    const contractArtifacts = _loadContractArtifacts(hre);
+    const contractArtifacts = await _loadContractArtifacts(hre);
     // 1. mount artifacts
     for (const artifact of contractArtifacts) {
         contractsData.interfaces[artifact.contractName] = artifact;
@@ -60,7 +60,8 @@ const trackDeploymentsFromBlock = async (hre, provider, contractsData, registry,
     _saveMethodRegistry(hre, registry);
 };
 exports.trackDeploymentsFromBlock = trackDeploymentsFromBlock;
-const _loadContractArtifacts = (hre) => {
+const _loadContractArtifacts = async (hre) => {
+    await hre.run("compile");
     const artifactsPath = `${hre.config.paths.artifacts}/contracts`;
     const artifacts = fs_1.default.readdirSync(artifactsPath);
     const contractArtifacts = [];
