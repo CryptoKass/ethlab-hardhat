@@ -30,15 +30,15 @@ const trackDeployments_1 = require("./trackDeployments");
     await new Promise(() => { }); // wait forever
 });
 (0, config_2.task)("ethlab:start", "Deploy contracts").setAction(async (args, hre) => {
-    console.log("\n\n🧪 STARTING LOCAL NODE 🧪");
+    console.log("\n\n[ethlab:start] 🧪 STARTING LOCAL NODE 🧪");
     hre.run("node");
     // wait for connection.
     await _isChainAlive();
     hre.hardhatArguments.network = "localhost";
     hre.network.name = "localhost";
-    console.log("\n\n🧪 STARTING WATCHER 🧪");
+    console.log("\n\n[ethlab:start] 🧪 STARTING WATCHER 🧪");
     hre.run("ethlab:watcher");
-    console.log("\n\n🧪 DEPLOYING CONTRACTS 🧪");
+    console.log("\n\n[ethlab:start] 🧪 DEPLOYING CONTRACTS 🧪");
     await hre.run("run", {
         script: "scripts/deploy.ts",
         network: "localhost",
