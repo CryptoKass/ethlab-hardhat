@@ -29,7 +29,8 @@ const trackDeployments = async (hre) => {
     // 2. save
     _saveContractData(hre, contractsData);
     const latestBlock = await provider.getBlockNumber();
-    for (let i = 0; i <= latestBlock; i++) {
+    const startBlock = Math.max(latestBlock - 5, 0);
+    for (let i = startBlock; i <= latestBlock; i++) {
         // 3. track existing deployments
         await (0, exports.trackDeploymentsFromBlock)(hre, provider, contractsData, registry, contractArtifacts, i);
     }
